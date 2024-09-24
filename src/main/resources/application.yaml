@@ -1,4 +1,5 @@
 mqtt:
+  client-id: test123
   ip: 127.0.0.1
   port: 1883
   qos: 0
