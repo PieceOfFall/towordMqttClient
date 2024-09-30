@@ -30,6 +30,9 @@ public class Mqttv3Client {
     @Value("${mqtt.qos}")
     private Integer qos;
 
+    @Value("${mqtt.subscribe}")
+    private String subscribe;
+
     @PostConstruct
     public void connect() {
         //创建连接参数，设置客户端ID
@@ -45,7 +48,7 @@ public class Mqttv3Client {
         //是否使用SSL/TLS
         mqttConnectParameter.setSsl(false);
         //遗嘱消息
-        MqttWillMsg mqttWillMsg = new MqttWillMsg("test", new byte[]{}, MqttQoS.EXACTLY_ONCE);
+        MqttWillMsg mqttWillMsg = new MqttWillMsg("backend-disconnect", new byte[]{}, MqttQoS.EXACTLY_ONCE);
         mqttConnectParameter.setWillMsg(mqttWillMsg);
         //是否清除会话
         mqttConnectParameter.setCleanSession(true);
@@ -57,9 +60,8 @@ public class Mqttv3Client {
         MqttClient mqttClient = mqttClientFactory.createMqttClient(mqttConnectParameter);
         mqttClient.addMqttCallback(ctrlMqttCallback);
 
-
         mqttClient.connect();
 
-        mqttClient.subscribe("123",MqttQoS.valueOf(qos));
+        mqttClient.subscribe(subscribe,MqttQoS.valueOf(qos));
     }
 }

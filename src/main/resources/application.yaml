@@ -1,5 +1,27 @@
 mqtt:
-  client-id: test123
-  ip: 127.0.0.1
+  client-id: 2
+  ip: 192.168.6.2
   port: 1883
   qos: 0
+  subscribe: touch
+
+toword:
+  pc-list:
+    - "192.168.6.11"
+    - "192.168.6.12"
+    - "192.168.6.13"
+    - "192.168.6.14"
+    - "192.168.6.15"
+    - "192.168.6.16"
+    - "192.168.6.17"
+    - "192.168.6.18"
+    - "192.168.6.19"
+    - "192.168.6.20"
+  shutdown-port: 7788
+  light-ip: 192.168.6.25
+  light-port: 6000
+  light-on-cmd: "000001"
+  light-off-cmd: "000000"
+  media-ip: 192.168.6.26
+  media-port: 6000
+  media-on-cmd: "010001"

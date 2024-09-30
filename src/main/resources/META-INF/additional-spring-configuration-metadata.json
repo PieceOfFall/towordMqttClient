@@ -1,0 +1,48 @@
+{
+  "properties": [
+    {
+      "name": "toword.pc-list",
+      "type": "java.lang.String",
+      "description": "Description for toword.pc-list."
+    },
+    {
+      "name": "toword.shutdown-port",
+      "type": "java.lang.String",
+      "description": "Description for toword.shutdown-port."
+    },
+    {
+      "name": "toword.light-on-cmd",
+      "type": "java.lang.String",
+      "description": "Description for toword.light-on-cmd."
+    },
+    {
+      "name": "toword.light-off-cmd",
+      "type": "java.lang.String",
+      "description": "Description for toword.light-off-cmd."
+    },
+    {
+      "name": "toword.light-ip",
+      "type": "java.lang.String",
+      "description": "Description for toword.light-ip."
+    },
+    {
+      "name": "toword.media-ip",
+      "type": "java.lang.String",
+      "description": "Description for toword.media-ip."
+    },
+    {
+      "name": "toword.media-on-cmd",
+      "type": "java.lang.String",
+      "description": "Description for toword.media-on-cmd."
+    },
+    {
+      "name": "toword.light-port",
+      "type": "java.lang.String",
+      "description": "Description for toword.light-port."
+    },
+    {
+      "name": "toword.media-port",
+      "type": "java.lang.String",
+      "description": "Description for toword.media-port."
+    }
+  ] }
