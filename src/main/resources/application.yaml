@@ -1,6 +1,6 @@
 mqtt:
   client-id: 2
-  ip: 192.168.6.2
+  ip: 127.0.0.1
   port: 1883
   qos: 0
   subscribe: touch

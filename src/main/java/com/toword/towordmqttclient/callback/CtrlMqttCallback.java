@@ -6,7 +6,6 @@ import com.toword.towordmqttclient.client.TcpClient;
 import com.toword.towordmqttclient.vo.TouchMsg;
 import io.github.netty.mqtt.client.callback.MqttCallback;
 import io.github.netty.mqtt.client.callback.MqttReceiveCallbackResult;
-import jakarta.annotation.PostConstruct;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,13 +69,15 @@ public class CtrlMqttCallback implements MqttCallback {
             if("0".equals(touchMsg.getMedia())) {
                 lastStopMills = System.currentTimeMillis();
                 for (String ip : pcList) {
-                    tcpClient.sendMsg(ip,shutdownPort,"shutdown");
+                        tcpClient.sendMsg(ip,shutdownPort,"shutdown");
                 }
             } else if("1".equals(touchMsg.getMedia()))  {
                 long currentMill = System.currentTimeMillis();
                 if(currentMill - lastStopMills > 30 * 1000) {
                     String mediaCmd = mediaOnCmd;
                     tcpClient.sendMsg(mediaIp,mediaPort,TcpClient.hexStringToByteBuf(mediaCmd));
+                } else {
+                    log.info("wait for shutdown," + (30 - (currentMill - lastStopMills)/1000) + " sec left..." );
                 }
 
             }

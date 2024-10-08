@@ -26,14 +26,11 @@ import java.net.InetSocketAddress;
 @Slf4j
 @Component
 public class TcpClient {
-    private Integer timeout = 3000;
+    private final Integer timeout = 3000;
 
     @Async
     public void sendMsg(String ip, int port, String message) {
-        if(!"ping".equals(message)) {
-            log.info("[tcp] {}: {}", ip, message);
-        }
-
+        log.info("[tcp] {}: {}", ip, message);
         NioEventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap bootstrap = initTcpClientBootStrap(group);
@@ -43,12 +40,13 @@ public class TcpClient {
             channel.writeAndFlush(buffer).sync();
             channel.closeFuture();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Error while sending TCP message: ", e);
             Thread.currentThread().interrupt();
         } finally {
             group.shutdownGracefully();
         }
     }
+
 
     @Async
     public void sendMsg(String ip, int port, ByteBuf message) {
@@ -68,6 +66,8 @@ public class TcpClient {
             group.shutdownGracefully();
         }
     }
+
+
 
     private Bootstrap initTcpClientBootStrap(NioEventLoopGroup group) {
         Bootstrap bootstrap = new Bootstrap();
