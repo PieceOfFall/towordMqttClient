@@ -6,6 +6,7 @@ import com.toword.towordmqttclient.client.TcpClient;
 import com.toword.towordmqttclient.vo.TouchMsg;
 import io.github.netty.mqtt.client.callback.MqttCallback;
 import io.github.netty.mqtt.client.callback.MqttReceiveCallbackResult;
+import jakarta.annotation.PostConstruct;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +48,20 @@ public class CtrlMqttCallback implements MqttCallback {
     private Integer lightPort;
     @Setter
     private Integer mediaPort;
-
+    @Setter
+    private Integer screenPort;
+    @Setter
+    private List<String> screenList;
+    @Setter
+    private String screenPoweronCommand;
+    @Setter
+    private String screenPoweroffCommand;
     private static long lastStopMills;
+
+    @PostConstruct
+    void p(){
+        System.out.println(screenList);
+    }
 
 
     @Override
@@ -71,6 +84,10 @@ public class CtrlMqttCallback implements MqttCallback {
                 for (String ip : pcList) {
                         tcpClient.sendMsg(ip,shutdownPort,"shutdown");
                 }
+                for (String ip : screenList) {
+                    tcpClient.sendMsg(ip,screenPort,screenPoweroffCommand);
+                }
+
             } else if("1".equals(touchMsg.getMedia()))  {
                 long currentMill = System.currentTimeMillis();
                 if(currentMill - lastStopMills > 30 * 1000) {
@@ -80,6 +97,9 @@ public class CtrlMqttCallback implements MqttCallback {
                     log.info("wait for shutdown," + (30 - (currentMill - lastStopMills)/1000) + " sec left..." );
                 }
 
+                for (String ip : screenList) {
+                    tcpClient.sendMsg(ip,screenPort,screenPoweronCommand);
+                }
             }
 
         } catch (JsonProcessingException e) {

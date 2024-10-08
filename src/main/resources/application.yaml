@@ -22,6 +22,18 @@ toword:
   light-port: 6000
   light-on-cmd: "000001"
   light-off-cmd: "000000"
+
   media-ip: 192.168.6.26
   media-port: 6000
   media-on-cmd: "010001"
+
+  screen-port: 5000
+  screen-list:
+    - "192.168.6.21"
+    - "192.168.6.22"
+    - "192.168.6.23"
+    - "192.168.6.24"
+  screen-poweron-command: "000000000006000600000001"
+  screen-poweroff-command: "000000000006000600010001"
+
+
