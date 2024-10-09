@@ -17,6 +17,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * @author FAll
@@ -30,7 +31,6 @@ public class TcpClient {
 
     @Async
     public void sendMsg(String ip, int port, String message) {
-        log.info("[tcp] {}: {}", ip, message);
         NioEventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap bootstrap = initTcpClientBootStrap(group);
@@ -38,6 +38,8 @@ public class TcpClient {
             Channel channel = future.channel();
             ByteBuf buffer = Unpooled.copiedBuffer(message, CharsetUtil.UTF_8);
             channel.writeAndFlush(buffer).sync();
+            log.info("[tcp] {}: {}", ip, message);
+
             channel.closeFuture();
         } catch (Exception e) {
             log.error("Error while sending TCP message: ", e);
@@ -50,7 +52,6 @@ public class TcpClient {
 
     @Async
     public void sendMsg(String ip, int port, ByteBuf message) {
-        log.info("[tcp] {}: {}", ip, ByteBufUtil.hexDump(message));
         NioEventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap bootstrap = initTcpClientBootStrap(group);
@@ -58,6 +59,33 @@ public class TcpClient {
             Channel channel = future.channel();
 
             channel.writeAndFlush(message).sync();
+            log.info("[tcp] {}: {}", ip, ByteBufUtil.hexDump(message));
+
+            channel.closeFuture();
+        } catch (Exception e) {
+            log.error("Error while sending TCP message");
+            Thread.currentThread().interrupt();
+        } finally {
+            group.shutdownGracefully();
+        }
+    }
+
+    @Async
+    public void sendHexStrList(String ip, int port, List<String> msgList,Integer sleepMills) {
+        if(sleepMills == null)
+            sleepMills = 0;
+        NioEventLoopGroup group = new NioEventLoopGroup();
+        try {
+            Bootstrap bootstrap = initTcpClientBootStrap(group);
+            ChannelFuture future = bootstrap.connect(new InetSocketAddress(ip, port)).sync();
+            Channel channel = future.channel();
+
+            for (String msg : msgList) {
+                log.info("[tcp] {}: {}", ip, msg);
+                channel.writeAndFlush(hexStringToByteBuf(msg)).sync();
+                Thread.sleep(sleepMills);
+            }
+
             channel.closeFuture();
         } catch (Exception e) {
             log.error("Error while sending TCP message");

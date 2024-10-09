@@ -6,6 +6,7 @@ import com.toword.towordmqttclient.client.TcpClient;
 import com.toword.towordmqttclient.vo.TouchMsg;
 import io.github.netty.mqtt.client.callback.MqttCallback;
 import io.github.netty.mqtt.client.callback.MqttReceiveCallbackResult;
+import io.netty.buffer.ByteBuf;
 import jakarta.annotation.PostConstruct;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,16 @@ public class CtrlMqttCallback implements MqttCallback {
     private String screenPoweronCommand;
     @Setter
     private String screenPoweroffCommand;
+    @Setter
+    private Integer sequentialPort;
+    @Setter
+    private String sequentialIp;
+    @Setter
+    private List<String> sequentialPoweronCommandList;
+    @Setter
+    private List<String> sequentialPoweroffCommandList;
+
+    private Integer sequentialTime;
     private static long lastStopMills;
 
     @PostConstruct
@@ -85,8 +96,10 @@ public class CtrlMqttCallback implements MqttCallback {
                         tcpClient.sendMsg(ip,shutdownPort,"shutdown");
                 }
                 for (String ip : screenList) {
-                    tcpClient.sendMsg(ip,screenPort,screenPoweroffCommand);
+                    tcpClient.sendMsg(ip,screenPort,TcpClient.hexStringToByteBuf(screenPoweroffCommand));
                 }
+
+                tcpClient.sendHexStrList(sequentialIp,sequentialPort,sequentialPoweroffCommandList,sequentialTime);
 
             } else if("1".equals(touchMsg.getMedia()))  {
                 long currentMill = System.currentTimeMillis();
@@ -98,8 +111,10 @@ public class CtrlMqttCallback implements MqttCallback {
                 }
 
                 for (String ip : screenList) {
-                    tcpClient.sendMsg(ip,screenPort,screenPoweronCommand);
+                    tcpClient.sendMsg(ip,screenPort,TcpClient.hexStringToByteBuf(screenPoweronCommand));
                 }
+
+                tcpClient.sendHexStrList(sequentialIp,sequentialPort,sequentialPoweronCommandList,sequentialTime);
             }
 
         } catch (JsonProcessingException e) {

@@ -36,4 +36,17 @@ toword:
   screen-poweron-command: "000000000006000600000001"
   screen-poweroff-command: "000000000006000600010001"
 
+  sequential-port: 1000
+  sequential-ip: 192.168.6.90
+  sequential-poweron-command-list:
+    - "FE010101"
+    - "CF010901"
+  sequential-poweroff-command-list:
+    - "FE010101"
+    - "CF010902"
+  sequential-time: 1000
+
+
+
+
 
