@@ -6,7 +6,6 @@ import com.toword.towordmqttclient.client.TcpClient;
 import com.toword.towordmqttclient.vo.TouchMsg;
 import io.github.netty.mqtt.client.callback.MqttCallback;
 import io.github.netty.mqtt.client.callback.MqttReceiveCallbackResult;
-import io.netty.buffer.ByteBuf;
 import jakarta.annotation.PostConstruct;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +64,7 @@ public class CtrlMqttCallback implements MqttCallback {
     private List<String> sequentialPoweronCommandList;
     @Setter
     private List<String> sequentialPoweroffCommandList;
-
+    @Setter
     private Integer sequentialTime;
     private static long lastStopMills;
 
@@ -78,48 +77,71 @@ public class CtrlMqttCallback implements MqttCallback {
     @Override
     public void messageReceiveCallback(MqttReceiveCallbackResult receiveCallbackResult) {
         String msg = new String(receiveCallbackResult.getPayload(), StandardCharsets.UTF_8);
-        try {
-            TouchMsg touchMsg = objectMapper.readValue(msg, TouchMsg.class);
-            String lightOperation = touchMsg.getLight();
-
-            String lightCmd = "1".equals(lightOperation) ?
-                    lightOnCmd : "0".equals(lightOperation) ?
-                    lightOffCmd : null;
-
-            if(lightCmd != null) {
-                tcpClient.sendMsg(lightIp,lightPort,TcpClient.hexStringToByteBuf(lightCmd));
-            }
-
-            if("0".equals(touchMsg.getMedia())) {
-                lastStopMills = System.currentTimeMillis();
-                for (String ip : pcList) {
-                        tcpClient.sendMsg(ip,shutdownPort,"shutdown");
-                }
+        switch (msg) {
+            case "sequential:open" ->
+                    tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweronCommandList, sequentialTime);
+            case "sequential:close" ->
+                    tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweroffCommandList, sequentialTime);
+            case "screen:open" -> {
                 for (String ip : screenList) {
-                    tcpClient.sendMsg(ip,screenPort,TcpClient.hexStringToByteBuf(screenPoweroffCommand));
+                    System.out.println(ip+":"+screenPort);
+                    tcpClient.sendMsg(ip, screenPort, TcpClient.hexStringToByteBuf(screenPoweronCommand));
                 }
-
-                tcpClient.sendHexStrList(sequentialIp,sequentialPort,sequentialPoweroffCommandList,sequentialTime);
-
-            } else if("1".equals(touchMsg.getMedia()))  {
-                long currentMill = System.currentTimeMillis();
-                if(currentMill - lastStopMills > 30 * 1000) {
-                    String mediaCmd = mediaOnCmd;
-                    tcpClient.sendMsg(mediaIp,mediaPort,TcpClient.hexStringToByteBuf(mediaCmd));
-                } else {
-                    log.info("wait for shutdown," + (30 - (currentMill - lastStopMills)/1000) + " sec left..." );
-                }
-
-                for (String ip : screenList) {
-                    tcpClient.sendMsg(ip,screenPort,TcpClient.hexStringToByteBuf(screenPoweronCommand));
-                }
-
-                tcpClient.sendHexStrList(sequentialIp,sequentialPort,sequentialPoweronCommandList,sequentialTime);
             }
+            case "screen:close" -> {
+                for (String ip : screenList) {
+                    tcpClient.sendMsg(ip, screenPort, TcpClient.hexStringToByteBuf(screenPoweroffCommand));
+                }
 
-        } catch (JsonProcessingException e) {
-            log.error("消息序列化错误:\n {}",e.getMessage());
+            }
+            default -> {
+                System.out.println(2);
+                try {
+                    TouchMsg touchMsg = objectMapper.readValue(msg, TouchMsg.class);
+                    String lightOperation = touchMsg.getLight();
+
+                    String lightCmd = "1".equals(lightOperation) ?
+                            lightOnCmd : "0".equals(lightOperation) ?
+                            lightOffCmd : null;
+
+                    if (lightCmd != null) {
+                        tcpClient.sendMsg(lightIp, lightPort, TcpClient.hexStringToByteBuf(lightCmd));
+                    }
+
+                    if ("0".equals(touchMsg.getMedia())) {
+                        lastStopMills = System.currentTimeMillis();
+                        for (String ip : pcList) {
+                            tcpClient.sendMsg(ip, shutdownPort, "shutdown");
+                        }
+                        for (String ip : screenList) {
+                            tcpClient.sendMsg(ip, screenPort, TcpClient.hexStringToByteBuf(screenPoweroffCommand));
+                        }
+
+                        tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweroffCommandList, sequentialTime);
+
+                    } else if ("1".equals(touchMsg.getMedia())) {
+                        long currentMill = System.currentTimeMillis();
+                        if (currentMill - lastStopMills > 30 * 1000) {
+                            String mediaCmd = mediaOnCmd;
+                            tcpClient.sendMsg(mediaIp, mediaPort, TcpClient.hexStringToByteBuf(mediaCmd));
+                        } else {
+                            log.info("wait for shutdown," + (30 - (currentMill - lastStopMills) / 1000) + " sec left...");
+                        }
+
+                        for (String ip : screenList) {
+                            tcpClient.sendMsg(ip, screenPort, TcpClient.hexStringToByteBuf(screenPoweronCommand));
+                        }
+
+                        tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweronCommandList, sequentialTime);
+                    }
+
+                } catch (JsonProcessingException e) {
+                    log.error("消息序列化错误:\n {}", e.getMessage());
+                }
+            }
         }
+
+
         MqttCallback.super.messageReceiveCallback(receiveCallbackResult);
     }
 }
