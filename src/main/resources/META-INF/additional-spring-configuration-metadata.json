@@ -44,5 +44,50 @@
       "name": "toword.media-port",
       "type": "java.lang.String",
       "description": "Description for toword.media-port."
+    },
+    {
+      "name": "toword.screen-port",
+      "type": "java.lang.String",
+      "description": "Description for toword.screen-port."
+    },
+    {
+      "name": "toword.screen-list",
+      "type": "java.lang.String",
+      "description": "Description for toword.screen-list."
+    },
+    {
+      "name": "toword.screen-poweron-command",
+      "type": "java.lang.String",
+      "description": "Description for toword.screen-poweron-command."
+    },
+    {
+      "name": "toword.screen-poweroff-command",
+      "type": "java.lang.String",
+      "description": "Description for toword.screen-poweroff-command."
+    },
+    {
+      "name": "toword.sequential-port",
+      "type": "java.lang.String",
+      "description": "Description for toword.sequential-port."
+    },
+    {
+      "name": "toword.sequential-ip",
+      "type": "java.lang.String",
+      "description": "Description for toword.sequential-ip."
+    },
+    {
+      "name": "toword.sequential-poweron-command-list",
+      "type": "java.lang.String",
+      "description": "Description for toword.sequential-poweron-command-list."
+    },
+    {
+      "name": "toword.sequential-poweroff-command-list",
+      "type": "java.lang.String",
+      "description": "Description for toword.sequential-poweroff-command-list."
+    },
+    {
+      "name": "toword.sequential-time",
+      "type": "java.lang.String",
+      "description": "Description for toword.sequential-time."
     }
   ] }

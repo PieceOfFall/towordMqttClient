@@ -58,8 +58,8 @@ public class TcpClient {
             ChannelFuture future = bootstrap.connect(new InetSocketAddress(ip, port)).sync();
             Channel channel = future.channel();
 
-            channel.writeAndFlush(message).sync();
             log.info("[tcp] {}: {}", ip, ByteBufUtil.hexDump(message));
+            channel.writeAndFlush(message).sync();
 
             channel.closeFuture();
         } catch (Exception e) {
@@ -94,6 +94,8 @@ public class TcpClient {
             group.shutdownGracefully();
         }
     }
+
+
 
 
 

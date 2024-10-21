@@ -25,13 +25,13 @@ public class CtrlMqttCallback implements MqttCallback {
     private final TcpClient tcpClient;
 
     @Autowired
-    public CtrlMqttCallback(ObjectMapper objectMapper,TcpClient tcpClient){
+    public CtrlMqttCallback(ObjectMapper objectMapper, TcpClient tcpClient) {
         this.tcpClient = tcpClient;
         this.objectMapper = objectMapper;
     }
 
     @Setter
-    private  List<String> pcList;
+    private List<String> pcList;
     @Setter
     private Integer shutdownPort;
     @Setter
@@ -69,7 +69,7 @@ public class CtrlMqttCallback implements MqttCallback {
     private static long lastStopMills;
 
     @PostConstruct
-    void p(){
+    void p() {
         System.out.println(screenList);
     }
 
@@ -77,70 +77,48 @@ public class CtrlMqttCallback implements MqttCallback {
     @Override
     public void messageReceiveCallback(MqttReceiveCallbackResult receiveCallbackResult) {
         String msg = new String(receiveCallbackResult.getPayload(), StandardCharsets.UTF_8);
-        switch (msg) {
-            case "sequential:open" ->
-                    tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweronCommandList, sequentialTime);
-            case "sequential:close" ->
-                    tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweroffCommandList, sequentialTime);
-            case "screen:open" -> {
-                for (String ip : screenList) {
-                    System.out.println(ip+":"+screenPort);
-                    tcpClient.sendMsg(ip, screenPort, TcpClient.hexStringToByteBuf(screenPoweronCommand));
-                }
+        try {
+            TouchMsg touchMsg = objectMapper.readValue(msg, TouchMsg.class);
+            String lightOperation = touchMsg.getLight();
+
+            String lightCmd = "1".equals(lightOperation) ?
+                    lightOnCmd : "0".equals(lightOperation) ?
+                    lightOffCmd : null;
+
+            if (lightCmd != null) {
+                tcpClient.sendMsg(lightIp, lightPort, TcpClient.hexStringToByteBuf(lightCmd));
             }
-            case "screen:close" -> {
+
+            if ("0".equals(touchMsg.getMedia())) {
+                lastStopMills = System.currentTimeMillis();
+                for (String ip : pcList) {
+                    tcpClient.sendMsg(ip, shutdownPort, "shutdown");
+                }
                 for (String ip : screenList) {
                     tcpClient.sendMsg(ip, screenPort, TcpClient.hexStringToByteBuf(screenPoweroffCommand));
                 }
 
-            }
-            default -> {
-                System.out.println(2);
-                try {
-                    TouchMsg touchMsg = objectMapper.readValue(msg, TouchMsg.class);
-                    String lightOperation = touchMsg.getLight();
+                tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweroffCommandList, sequentialTime);
 
-                    String lightCmd = "1".equals(lightOperation) ?
-                            lightOnCmd : "0".equals(lightOperation) ?
-                            lightOffCmd : null;
-
-                    if (lightCmd != null) {
-                        tcpClient.sendMsg(lightIp, lightPort, TcpClient.hexStringToByteBuf(lightCmd));
-                    }
-
-                    if ("0".equals(touchMsg.getMedia())) {
-                        lastStopMills = System.currentTimeMillis();
-                        for (String ip : pcList) {
-                            tcpClient.sendMsg(ip, shutdownPort, "shutdown");
-                        }
-                        for (String ip : screenList) {
-                            tcpClient.sendMsg(ip, screenPort, TcpClient.hexStringToByteBuf(screenPoweroffCommand));
-                        }
-
-                        tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweroffCommandList, sequentialTime);
-
-                    } else if ("1".equals(touchMsg.getMedia())) {
-                        long currentMill = System.currentTimeMillis();
-                        if (currentMill - lastStopMills > 30 * 1000) {
-                            String mediaCmd = mediaOnCmd;
-                            tcpClient.sendMsg(mediaIp, mediaPort, TcpClient.hexStringToByteBuf(mediaCmd));
-                        } else {
-                            log.info("wait for shutdown," + (30 - (currentMill - lastStopMills) / 1000) + " sec left...");
-                        }
-
-                        for (String ip : screenList) {
-                            tcpClient.sendMsg(ip, screenPort, TcpClient.hexStringToByteBuf(screenPoweronCommand));
-                        }
-
-                        tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweronCommandList, sequentialTime);
-                    }
-
-                } catch (JsonProcessingException e) {
-                    log.error("消息序列化错误:\n {}", e.getMessage());
+            } else if ("1".equals(touchMsg.getMedia())) {
+                long currentMill = System.currentTimeMillis();
+                if (currentMill - lastStopMills > 30 * 1000) {
+                    String mediaCmd = mediaOnCmd;
+                    tcpClient.sendMsg(mediaIp, mediaPort, TcpClient.hexStringToByteBuf(mediaCmd));
+                } else {
+                    log.info("wait for shutdown," + (30 - (currentMill - lastStopMills) / 1000) + " sec left...");
                 }
-            }
-        }
 
+                for (String ip : screenList) {
+                    tcpClient.sendMsg(ip, screenPort, TcpClient.hexStringToByteBuf(screenPoweronCommand));
+                }
+
+                tcpClient.sendHexStrList(sequentialIp, sequentialPort, sequentialPoweronCommandList, sequentialTime);
+            }
+
+        } catch (JsonProcessingException e) {
+            log.error("消息序列化错误:\n {}", e.getMessage());
+        }
 
         MqttCallback.super.messageReceiveCallback(receiveCallbackResult);
     }
